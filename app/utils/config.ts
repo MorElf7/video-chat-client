@@ -5,12 +5,27 @@ const config = {
 	pcConfig: {
 		iceServers: [
 			{
-				urls: "turn:turn.anyfirewall.com:443?transport=tcp",
-				credential: "webrtc",
-				username: "webrtc",
+				urls: "stun:stun.relay.metered.ca:80",
 			},
 			{
-				urls: "stun:stun.l.google.com:19302",
+				urls: "turn:a.relay.metered.ca:80",
+				username: "0334734087c1ba118c083d26",
+				credential: "ejYxn2f7II5TQFLQ",
+			},
+			{
+				urls: "turn:a.relay.metered.ca:80?transport=tcp",
+				username: "0334734087c1ba118c083d26",
+				credential: "ejYxn2f7II5TQFLQ",
+			},
+			{
+				urls: "turn:a.relay.metered.ca:443",
+				username: "0334734087c1ba118c083d26",
+				credential: "ejYxn2f7II5TQFLQ",
+			},
+			{
+				urls: "turn:a.relay.metered.ca:443?transport=tcp",
+				username: "0334734087c1ba118c083d26",
+				credential: "ejYxn2f7II5TQFLQ",
 			},
 		],
 	},
