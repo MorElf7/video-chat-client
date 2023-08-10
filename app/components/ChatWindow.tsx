@@ -12,7 +12,13 @@ import { reachBottomReverse } from "../utils/scrollEventHandler";
 import { setUpSocket } from "../utils/socket";
 import ChatBox from "./ChatBox";
 
-export default function ({ roomInfo }: { roomInfo: RoomDto }) {
+export default function ({
+	roomInfo,
+	handleCallStartModal,
+}: {
+	roomInfo: RoomDto;
+	handleCallStartModal: (s: boolean, user: string) => void;
+}) {
 	const [page, setPage] = useState<number>(0);
 	const [chats, setChats] = useState<ChatDto[]>([]);
 	const [refresh, setRefresh] = useLocalStorage<boolean>("refresh", false);
@@ -36,6 +42,10 @@ export default function ({ roomInfo }: { roomInfo: RoomDto }) {
 
 			socketRef.current.on("message-sent", ({ chat }: { chat: ChatDto }) => {
 				setChats((old) => [chat, ...old]);
+			});
+
+			socketRef.current.on("call-started", ({ socket, user }: { socket: string; user: string }) => {
+				handleCallStartModal(true, user);
 			});
 
 			if (roomInfo?.id) {

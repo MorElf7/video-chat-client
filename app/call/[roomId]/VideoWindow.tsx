@@ -215,10 +215,6 @@ export default function ({
 				}
 			);
 
-			socketRef.current?.on("first-user", () => {
-				// setFirstUser(true);
-			});
-
 			socketRef.current?.on(
 				"new-mute-config",
 				({ socket, video, audio }: { socket: string; audio: boolean; video: boolean }) => {

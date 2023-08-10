@@ -1,25 +1,72 @@
 "use client";
 
-import defaultProfileAvatar from "@/public/avatar-default.png";
+import  defaultPic from "@/public/avatar-default.png";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import useSWR from "swr";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { NotificationDto } from "../interfaces/INotification";
+import { PageResponse } from "../interfaces/IResponse";
 import { AuthenticationContext } from "../layout";
+import { config } from "../utils/config";
+import { fetcher } from "../utils/fetcher";
+import { reachBottom } from "../utils/scrollEventHandler";
+import NotificationBox from "./NotificationBox";
 
-export default function ({}: {}) {
+export default function ({ handleActiveRoom }: { handleActiveRoom: (s: string) => void }) {
 	const [token, setToken] = useLocalStorage("token", "");
+	const [refresh, setRefresh] = useLocalStorage<boolean>("refresh", false);
 	const [rightPopUpActive, setRightPopUpActive] = useState<boolean>(false);
 	const [leftPopUpActive, setLeftPopUpActive] = useState<boolean>(false);
 	const router = useRouter();
 	const authentication = useContext(AuthenticationContext);
+	const [notificationActive, setNotificationActive] = useState<boolean>(false);
+	const [page, setPage] = useState<number>(0);
+	const [notifications, setNotifications] = useState<NotificationDto[]>([]);
+
+	const notificationsData = useSWR(
+		[
+			`${config.cloud.uri}/api/notification`,
+			token,
+			setRefresh,
+			{
+				page,
+				pageSize: 20,
+				isRead: false,
+			},
+		],
+		fetcher
+	);
+	const data = notificationsData.data as unknown as PageResponse<NotificationDto>;
+	const totalNotifications = data?.totalElements;
+
+	useEffect(() => {
+		notificationsData.mutate();
+	}, [page]);
+
+	useEffect(() => {
+		if (data?.data) {
+			if (page === 0) {
+				setNotifications(data.data);
+			} else {
+				setNotifications((old) => [...old, ...data.data]);
+			}
+		}
+	}, [data]);
 
 	const handleSignout = (e: any) => {
 		e.preventDefault();
 		setRightPopUpActive(false);
 		setToken("");
 		router.push("/login");
+	};
+
+	const handleNotifications = (roomId: string) => {
+		setNotificationActive(false);
+		notificationsData.mutate();
+		handleActiveRoom(roomId);
 	};
 
 	return (
@@ -85,6 +132,55 @@ export default function ({}: {}) {
 						</div>
 					</div>
 					<div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+						<div className="relative">
+							{authentication.userProfile && (
+								<button
+									onClick={() => {
+										setNotificationActive((old) => !old);
+									}}
+									type="button"
+									className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none ">
+									<svg
+										className="h-6 w-6"
+										fill="none"
+										viewBox="0 0 24 24"
+										strokeWidth="1.5"
+										stroke="currentColor"
+										aria-hidden="true">
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
+										/>
+									</svg>
+									{totalNotifications > 0 && (
+										<div className="absolute inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full -top-2 -right-2 ">
+											{totalNotifications}
+										</div>
+									)}
+								</button>
+							)}
+
+							{notificationActive && (
+								<div
+									onScroll={(e) => {
+										if (reachBottom(e)) {
+											setPage((old) => old + 1);
+										}
+									}}
+									className="absolute overflow-y-auto overscroll-contain right-0 z-10 mt-2 w-[400px] origin-top-right rounded-md ">
+									{notifications?.length > 0 &&
+										notifications.map((noti, i) => (
+											<NotificationBox
+												notification={noti}
+												key={i}
+												handleNotifications={handleNotifications}
+											/>
+										))}
+								</div>
+							)}
+						</div>
+
 						<div className="relative ml-3">
 							{authentication.userProfile && (
 								<div>
@@ -101,7 +197,7 @@ export default function ({}: {}) {
 										<span className="sr-only">Open user menu</span>
 										<Image
 											className="h-8 w-8 rounded-full"
-											src={authentication.userProfile?.avatar || defaultProfileAvatar}
+											src={authentication.userProfile?.avatar || defaultPic}
 											alt="Profile Avatar"
 											width={256}
 											height={256}
