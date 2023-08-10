@@ -9,9 +9,9 @@ const config = {
 				credential: "webrtc",
 				username: "webrtc",
 			},
-			// {
-			// 	urls: "stun:stun.l.google.com:19302",
-			// },
+			{
+				urls: "stun:stun.l.google.com:19302",
+			},
 		],
 	},
 };
