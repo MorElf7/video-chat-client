@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { DataResponse } from "../interfaces/IResponse";
 import { RoomDto, SaveRoomRequest } from "../interfaces/IRoom";
-import { AuthenticationContext } from "../layout";
+import { AuthenticationContext } from "@/components/AuthenticationProvider";
 import client from "../utils/axiosClient";
 import { config } from "../utils/config";
 

@@ -1,8 +1,8 @@
 "use client";
 
-import ChatWindow from "./ChatWindow";
-import VideoWindow from "./VideoWindow";
-import { AuthenticationContext } from "@/app/layout";
+import ChatWindow from "@/components/CallChatWindow";
+import VideoWindow from "@/components/CallVideoWindow";
+import { AuthenticationContext } from "@/components/AuthenticationProvider";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useContext, useEffect } from "react";
 

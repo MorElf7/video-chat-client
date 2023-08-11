@@ -1,13 +1,13 @@
 "use client";
 
+import { AuthenticationContext } from "@/components/AuthenticationProvider";
 import Image from "next/image";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { SaveUserRequest, UserDto } from "../interfaces/IUser";
-import { AuthenticationContext } from "../layout";
-import client from "../utils/axiosClient";
-import { config } from "../utils/config";
-import { DataResponse } from "../interfaces/IResponse";
 import { useRouter } from "next/navigation";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { DataResponse } from "../../interfaces/IResponse";
+import { SaveUserRequest, UserDto } from "../../interfaces/IUser";
+import client from "../../utils/axiosClient";
+import { config } from "../../utils/config";
 
 const initalPayload = {
 	id: "",
@@ -28,8 +28,7 @@ export default function () {
 	const [payload, setPayload] = useState<SaveUserRequest>(initalPayload);
 	const [dragActive, setDragActive] = useState<boolean>(false);
 	const inputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
-
+	const router = useRouter();
 	useEffect(() => {
 		if (userProfile) {
 			setPayload({
@@ -86,17 +85,17 @@ export default function () {
 
 	const handleSubmit = async (e: any) => {
 		e.preventDefault();
-    const res = (await client.post(`${config.cloud.uri}/api/user`, payload, {
+		const res = (await client.post(`${config.cloud.uri}/api/user`, payload, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},
 		})) as unknown as DataResponse<UserDto>;
 		if (res.data) {
-      mutate();
-      router.push("/")
+			mutate();
+			router.push("/");
 		} else {
-      router.refresh();
-    }
+			router.refresh();
+		}
 	};
 
 	const onButtonClick = () => {

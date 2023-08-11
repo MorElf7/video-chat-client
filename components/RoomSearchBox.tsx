@@ -1,15 +1,15 @@
 "use client";
 
-import { DataResponse } from "@/app/interfaces/IResponse";
-import { RoomDto } from "@/app/interfaces/IRoom";
-import { AuthenticationContext } from "@/app/layout";
-import client from "@/app/utils/axiosClient";
-import { config } from "@/app/utils/config";
+import { AuthenticationContext } from "@/components/AuthenticationProvider";
+import { DataResponse } from "@/interfaces/IResponse";
+import { RoomDto } from "@/interfaces/IRoom";
 import defaultPic from "@/public/avatar-default.png";
+import client from "@/utils/axiosClient";
+import { config } from "@/utils/config";
 import Image from "next/image";
 import { useContext, useState } from "react";
 
-export default function ({ room, handleMutate }: { room: RoomDto, handleMutate: () => void }) {
+export default function ({ room, handleMutate }: { room: RoomDto; handleMutate: () => void }) {
 	const [moreDesc, setMoreDesc] = useState<boolean>(() => false);
 	const { token, userProfile } = useContext(AuthenticationContext);
 	const [isJoined, setIsJoined] = useState<boolean>(room?.users.includes(userProfile?.id));

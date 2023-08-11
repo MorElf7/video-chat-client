@@ -1,14 +1,10 @@
-import { SetStateAction, useCallback, useContext, useEffect, useState } from "react";
+import { SetStateAction,  useContext, useEffect, } from "react";
 import useSWR from "swr";
 import { useLocalStorage } from "../hooks/useLocalStorage";
-import { DataResponse, PageResponse } from "../interfaces/IResponse";
-import { RoomDto, SaveRoomRequest } from "../interfaces/IRoom";
-import { UserDto } from "../interfaces/IUser";
-import { AuthenticationContext } from "../layout";
-import client from "../utils/axiosClient";
+import { RoomDto } from "../interfaces/IRoom";
+import { AuthenticationContext } from "@/components/AuthenticationProvider";
 import { config } from "../utils/config";
 import { fetcher } from "../utils/fetcher";
-import { reachBottom } from "../utils/scrollEventHandler";
 import { useRouter } from "next/navigation";
 
 export default function ({

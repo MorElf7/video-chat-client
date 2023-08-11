@@ -1,15 +1,16 @@
 "use client";
 
+import { AuthenticationContext } from "@/components/AuthenticationProvider";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import useSWRMutation from "swr/mutation";
-import RoomSearchBox from "./RoomSearchBox";
-import { PageResponse } from "../interfaces/IResponse";
-import { RoomDto } from "../interfaces/IRoom";
-import { AuthenticationContext } from "../layout";
-import client from "../utils/axiosClient";
-import { config } from "../utils/config";
-import { reachBottom } from "../utils/scrollEventHandler";
+import RoomSearchBox from "../../components/RoomSearchBox";
+import { PageResponse } from "../../interfaces/IResponse";
+import { RoomDto } from "../../interfaces/IRoom";
+import client from "../../utils/axiosClient";
+import { config } from "../../utils/config";
+import { reachBottom } from "../../utils/scrollEventHandler";
 
 const searchRoom = async (
 	url: string,
@@ -30,15 +31,15 @@ const searchRoom = async (
 export default function () {
 	const [textSearch, setTextSearch] = useState<string>("");
 	const [page, setPage] = useState<number>(0);
-	const { trigger, data } = useSWRMutation(`${config.cloud.uri}/api/room`, searchRoom);
+	const [refresh, setRefresh] = useLocalStorage<boolean>("refresh", false);
+	const { trigger, data, error } = useSWRMutation(`${config.cloud.uri}/api/room`, searchRoom);
 	const { token, userProfile } = useContext(AuthenticationContext);
 	const [rooms, setRooms] = useState<RoomDto[]>([]);
 	const router = useRouter();
 
 	const handleMutate = () => {
-
 		trigger({ token, page, pageSize: 20, textSearch });
-	}
+	};
 
 	useEffect(() => {
 		if (token === "" && !userProfile) {
@@ -47,20 +48,26 @@ export default function () {
 	}, [token, userProfile]);
 
 	useEffect(() => {
-		handleMutate()
+		if (page !== 0) handleMutate();
 	}, [page]);
 
 	useEffect(() => {
-		setPage(0);
-		handleMutate()
+		if (textSearch !== "") {
+			setPage(0);
+			handleMutate();
+		}
 	}, [textSearch]);
 
 	useEffect(() => {
-		if (data?.data) {
-			if (page === 0) {
-				setRooms(data.data);
-			} else {
-				setRooms((old) => [...old, ...data.data]);
+		if (error) {
+			setRefresh(true);
+		} else {
+			if (data?.data) {
+				if (page === 0) {
+					setRooms(data.data);
+				} else {
+					setRooms((old) => [...old, ...data.data]);
+				}
 			}
 		}
 	}, [data]);
@@ -94,7 +101,9 @@ export default function () {
 				className="flex flex-col w-4/5 max-h-[700px] overflow-y-auto overscroll-contain grow my-5">
 				{rooms?.length > 0 &&
 					textSearch.length > 0 &&
-					rooms.map((e: RoomDto, index: number) => <RoomSearchBox key={index} room={e} handleMutate={handleMutate} />)}
+					rooms.map((e: RoomDto, index: number) => (
+						<RoomSearchBox key={index} room={e} handleMutate={handleMutate} />
+					))}
 			</div>
 		</div>
 	);

@@ -1,37 +1,36 @@
-"use client";
-
+import { AuthenticationContext } from "@/components/AuthenticationProvider";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { ChatDto, RoomDto } from "@/interfaces/IRoom";
+import { config } from "@/utils/config";
+import { fetcher } from "@/utils/fetcher";
+import { reachBottomReverse } from "@/utils/scrollEventHandler";
+import { setUpSocket } from "@/utils/socket";
 import { useContext, useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 import useSWR from "swr";
-import { useLocalStorage } from "../hooks/useLocalStorage";
-import { ChatDto, RoomDto } from "../interfaces/IRoom";
-import { AuthenticationContext } from "../layout";
-import { config } from "../utils/config";
-import { fetcher } from "../utils/fetcher";
-import { reachBottomReverse } from "../utils/scrollEventHandler";
-import { setUpSocket } from "../utils/socket";
-import ChatBox from "./ChatBox";
+import ChatBox from "@/components/ChatBox";
 
-export default function ({
-	roomInfo,
-	handleCallStartModal,
-}: {
-	roomInfo: RoomDto;
-	handleCallStartModal: (s: boolean, user: string) => void;
-}) {
+export default function ({ roomId }: { roomId: string | null }) {
+	const { token, userProfile } = useContext(AuthenticationContext);
+	const [refresh, setRefresh] = useLocalStorage<boolean>("refresh", false);
 	const [page, setPage] = useState<number>(0);
 	const [chats, setChats] = useState<ChatDto[]>([]);
-	const [refresh, setRefresh] = useLocalStorage<boolean>("refresh", false);
 	const [message, setMessage] = useState<string>("");
-	const { token, userProfile } = useContext(AuthenticationContext);
 	const socketRef = useRef<Socket>();
-
+	const chatRoomData = useSWR(
+		[`${config.cloud.uri}/api/room/call/${roomId}`, token, setRefresh, null],
+		fetcher
+	);
+	const chatRoom: RoomDto = chatRoomData.data?.data;
 	const chatsData = useSWR(
 		[
-			`${config.cloud.uri}/api/room/${roomInfo?.id}/chat`,
+			`${config.cloud.uri}/api/room/${chatRoom?.id}/chat`,
 			token,
 			setRefresh,
-			{ page, pageSize: 20, type: "chat" },
+			{
+				page,
+				pageSize: 20,
+			},
 		],
 		fetcher
 	);
@@ -44,22 +43,17 @@ export default function ({
 				setChats((old) => [chat, ...old]);
 			});
 
-			socketRef.current.on("call-started", ({ socket, user }: { socket: string; user: string }) => {
-				handleCallStartModal(true, user);
+			socketRef.current.emit("subscribe", {
+				roomId: chatRoom?.id,
+				type: "chat",
 			});
-
-			if (roomInfo?.id) {
-				socketRef.current.emit("subscribe", {
-					roomId: roomInfo.id,
-					type: "chat",
-				});
-			}
 		}
 
 		return () => {
 			socketRef.current?.disconnect();
 		};
-	}, [roomInfo]);
+	}, [chatRoom]);
+
 	useEffect(() => {
 		chatsData.mutate();
 	}, [page]);
@@ -76,15 +70,18 @@ export default function ({
 
 	const handleSendMessage = () => {
 		if (message === "") return;
-		socketRef.current?.emit("send-message", {
-			to: roomInfo?.id,
-			message,
-		});
-		setMessage("");
+		if (chatRoom?.id) {
+			socketRef.current?.emit("send-message", {
+				to: chatRoom?.id,
+				message,
+			});
+			setMessage("");
+		}
 	};
+
 	return (
-		<div className="flex flex-col-reverse grow ">
-			<div className="flex flex-row-reverse h-[8%] pl-5 pr-3 pt-5 mb-3 items-center">
+		<div className="flex grow flex-col-reverse w-1/4 bg-slate-500 mr-14 mt-8 mb-8 rounded-lg ">
+			<div className="flex flex-row-reverse items-center bg-zinc-600 h-[8%] rounded-b-lg w-full pl-5 pr-3 py-5 ">
 				<svg
 					onClick={handleSendMessage}
 					xmlns="http://www.w3.org/2000/svg"
@@ -93,7 +90,7 @@ export default function ({
 					strokeWidth="1.5"
 					stroke="currentColor"
 					color="white"
-					className="w-8 h-8 hover:stroke-slate-400">
+					className="w-9 h-9 stroke-slate-200 hover:stroke-zinc-700 mr-4">
 					<path
 						strokeLinecap="round"
 						strokeLinejoin="round"
@@ -113,13 +110,12 @@ export default function ({
 					name="message"
 					id="message"
 					value={message}
-					className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-white focus:border-white block w-full mr-3 p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+					className="bg-gray-300 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-white focus:border-white block w-full mr-3 ml-2 p-3 "
 					placeholder="Text Message"
 				/>
 			</div>
-
 			<div
-				className="overflow-auto overscroll-contain flex grow shrink flex-col-reverse px-5 py-5 "
+				className="overflow-auto overscroll-contain flex grow shrink flex-col-reverse px-5 py-5 min-h-[780px] max-h-[790px]"
 				onScroll={(e) => {
 					if (reachBottomReverse(e)) {
 						setPage((old) => old + 1);
@@ -129,6 +125,9 @@ export default function ({
 					chats.map((chat: ChatDto, index) => (
 						<ChatBox chat={chat} userProfile={userProfile} key={index} />
 					))}
+			</div>
+			<div className="flex grow bg-zinc-600 rounded-t-lg h-[40px] p-3 items-center text-white">
+				{chatRoom?.name}
 			</div>
 		</div>
 	);

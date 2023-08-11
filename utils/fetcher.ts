@@ -10,6 +10,7 @@ export const fetcher = ([url, token, setRefresh, params]: [
 	params: any
 ]) => {
 	if (url.includes("/undefined") || url.includes("/null")) return;
+	if (url.endsWith("/")) return;
 	if (!token || token === "") return;
 	return client
 		.get(url, {

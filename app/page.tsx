@@ -1,44 +1,55 @@
 "use client";
+import { AuthenticationContext } from "@/components/AuthenticationProvider";
+import CallStartModaledModal from "@/components/CallStartedModal";
+import ChatWindow from "@/components/ChatWindow";
+import DashboardBar from "@/components/DashboardBar";
+import Navbar from "@/components/Navbar";
+import NewChatModal from "@/components/NewChatModal";
+import RoomSettingWindow from "@/components/RoomSettingWindow";
+import RoomWindow from "@/components/RoomWindow";
+import { PageResponse } from "@/interfaces/IResponse";
+import client from "@/utils/axiosClient";
 import { useRouter } from "next/navigation";
-import { useCallback, useContext, useEffect, useState } from "react";
-import { act } from "react-dom/test-utils";
+import {  useContext, useEffect, useState } from "react";
 import useSWR from "swr";
-import CallStartModaledModal from "./components/CallStartedModal";
-import ChatWindow from "./components/ChatWindow";
-import DashboardBar from "./components/DashboardBar";
-import Navbar from "./components/Navbar";
-import NewChatModal from "./components/NewChatModal";
-import RoomSettingWindow from "./components/RoomSettingWindow";
-import RoomWindow from "./components/RoomWindow";
-import { useLocalStorage } from "./hooks/useLocalStorage";
-import { RoomDto } from "./interfaces/IRoom";
-import { UserDto } from "./interfaces/IUser";
-import { AuthenticationContext } from "./layout";
-import { config } from "./utils/config";
-import { fetcher } from "./utils/fetcher";
+import useSWRMutation from "swr/mutation";
+import { useLocalStorage } from "../hooks/useLocalStorage";
+import { RoomDto } from "../interfaces/IRoom";
+import { config } from "../utils/config";
+import { fetcher } from "../utils/fetcher";
+
+const getUserRooms = async (
+	url: string,
+	{ arg }: { arg: { token: string; page: number; pageSize: number } }
+) => {
+	return (await client.get(url, {
+		headers: {
+			Authorization: `Bearer ${arg.token}`,
+		},
+		params: {
+			page: arg.page,
+			pageSize: arg.pageSize,
+		},
+	})) as unknown as PageResponse<RoomDto>;
+};
 
 export default function Home() {
+	const { token, userProfile } = useContext(AuthenticationContext);
 	const [refresh, setRefresh] = useLocalStorage<boolean>("refresh", false);
 	const [activeRoom, setActiveRoom] = useState<string | null>(null);
-	const [newChatModal, setNewChatModal] = useState<boolean>(false);
-	const [callStartModal, setCallStartModal] = useState<boolean>(false);
-	const [roomSetting, setRoomSetting] = useState<boolean>(false);
-	const router = useRouter();
-	const { token, userProfile } = useContext(AuthenticationContext);
 	const [page, setPage] = useState<number>(0);
-	const [userCalled, setUserCalled] = useState<string>("");
-
-	const roomsData = useSWR(
-		[`${config.cloud.uri}/api/room/user`, token, setRefresh, { page, pageSize: 20, type: "chat" }],
-		fetcher
-	);
-	const [rooms, setRooms] = useState<RoomDto[]>([]);
+	const roomsData = useSWRMutation(`${config.cloud.uri}/api/room/user`, getUserRooms);
+	const [rooms, setRooms] = useState<RoomDto[]>(() => roomsData.data?.data || []);
 	const roomData = useSWR(
 		[`${config.cloud.uri}/api/room/${activeRoom}`, token, setRefresh],
 		fetcher
 	);
 	const roomInfo: RoomDto = roomData.data?.data;
-
+	const [newChatModal, setNewChatModal] = useState<boolean>(false);
+	const [callStartModal, setCallStartModal] = useState<boolean>(false);
+	const [roomSetting, setRoomSetting] = useState<boolean>(false);
+	const [userCalled, setUserCalled] = useState<string>("");
+	const router = useRouter();
 	useEffect(() => {
 		if (token === "" && !userProfile) {
 			router.push("/login");
@@ -46,38 +57,41 @@ export default function Home() {
 	}, [token, userProfile]);
 
 	useEffect(() => {
-		roomsData.mutate();
-	}, [activeRoom]);
-
-	useEffect(() => {
-		roomsData.mutate();
+		roomsData.trigger({ token, page, pageSize: 20 });
 	}, [page]);
 
 	useEffect(() => {
-		if (roomsData.data?.data) {
+		if (roomsData.error) {
+			setRefresh(true);
+		} else {
 			if (page === 0) {
-				setRooms(roomsData.data?.data);
+				if (roomsData.data?.data) {
+					setRooms(roomsData.data?.data);
+				}
 			} else {
-				setRooms((old) => [...old, ...roomsData.data?.data]);
+				setRooms((old) => {
+					if (!roomsData.data?.data) return old;
+					return [...old, ...roomsData.data?.data];
+				});
 			}
 		}
 	}, [roomsData.data]);
 
-	const handleActiveRoom = useCallback((newActiveRoom: string) => {
+	const handleActiveRoom = (newActiveRoom: string) => {
 		setActiveRoom(newActiveRoom);
-	}, []);
+	};
 
-	const handleRoomSetting = useCallback((s: boolean) => {
+	const handleRoomSetting = (s: boolean) => {
 		setRoomSetting(s);
-	}, []);
+	};
 
-	const handleCallStartModal = useCallback((s: boolean, user: string) => {
+	const handleCallStartModal = (s: boolean, user: string) => {
 		setCallStartModal(s);
 		setUserCalled(user);
-	}, []);
+	};
 
 	return (
-		<div className="flex flex-col h-screen ">
+		<>
 			<NewChatModal
 				open={newChatModal}
 				setOpen={setNewChatModal}
@@ -89,7 +103,7 @@ export default function Home() {
 				userCalled={userCalled}
 				chatRoom={roomInfo}
 			/>
-			<Navbar handleActiveRoom={handleActiveRoom}/>
+			<Navbar handleActiveRoom={handleActiveRoom} />
 			<DashboardBar
 				roomInfo={roomInfo}
 				setNewChatModal={setNewChatModal}
@@ -110,11 +124,11 @@ export default function Home() {
 						handleRoomSetting={handleRoomSetting}
 						mutate={() => {
 							roomData.mutate();
-							roomsData.mutate();
+							roomsData.trigger({ token, page, pageSize: 20 });
 						}}
 					/>
 				)}
 			</div>
-		</div>
+		</>
 	);
 }

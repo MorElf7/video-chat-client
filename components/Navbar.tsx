@@ -1,6 +1,8 @@
 "use client";
 
-import  defaultPic from "@/public/avatar-default.png";
+import { AuthenticationContext } from "@/components/AuthenticationProvider";
+import defaultPic from "@/public/avatar-default.png";
+import client from "@/utils/axiosClient";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,13 +11,26 @@ import useSWR from "swr";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { NotificationDto } from "../interfaces/INotification";
 import { PageResponse } from "../interfaces/IResponse";
-import { AuthenticationContext } from "../layout";
 import { config } from "../utils/config";
-import { fetcher } from "../utils/fetcher";
 import { reachBottom } from "../utils/scrollEventHandler";
 import NotificationBox from "./NotificationBox";
 
-export default function ({ handleActiveRoom }: { handleActiveRoom: (s: string) => void }) {
+const getNotifications = async (
+	url: string,
+	{ arg }: { arg: { token: string; page: number; pageSize: number } }
+) => {
+	return (await client.get(url, {
+		headers: {
+			Authorization: `Bearer ${arg.token}`,
+		},
+		params: {
+			page: arg.page,
+			pageSize: arg.pageSize,
+		},
+	})) as unknown as PageResponse<NotificationDto>;
+};
+
+export default function ({ handleActiveRoom }: { handleActiveRoom?: (s: string) => void }) {
 	const [token, setToken] = useLocalStorage("token", "");
 	const [refresh, setRefresh] = useLocalStorage<boolean>("refresh", false);
 	const [rightPopUpActive, setRightPopUpActive] = useState<boolean>(false);
@@ -27,17 +42,8 @@ export default function ({ handleActiveRoom }: { handleActiveRoom: (s: string) =
 	const [notifications, setNotifications] = useState<NotificationDto[]>([]);
 
 	const notificationsData = useSWR(
-		[
-			`${config.cloud.uri}/api/notification`,
-			token,
-			setRefresh,
-			{
-				page,
-				pageSize: 20,
-				isRead: false,
-			},
-		],
-		fetcher
+		`${config.cloud.uri}/api/notification`,
+		getNotifications
 	);
 	const data = notificationsData.data as unknown as PageResponse<NotificationDto>;
 	const totalNotifications = data?.totalElements;
@@ -66,7 +72,7 @@ export default function ({ handleActiveRoom }: { handleActiveRoom: (s: string) =
 	const handleNotifications = (roomId: string) => {
 		setNotificationActive(false);
 		notificationsData.mutate();
-		handleActiveRoom(roomId);
+		if (handleActiveRoom) handleActiveRoom(roomId);
 	};
 
 	return (

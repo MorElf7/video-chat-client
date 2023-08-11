@@ -1,13 +1,12 @@
+import { AuthenticationContext } from "@/components/AuthenticationProvider";
 import { SetStateAction, useCallback, useContext, useEffect, useState } from "react";
-import useSWR from "swr";
+import useSWRMutation from "swr/mutation";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { DataResponse, PageResponse } from "../interfaces/IResponse";
 import { RoomDto, SaveRoomRequest } from "../interfaces/IRoom";
 import { UserDto } from "../interfaces/IUser";
-import { AuthenticationContext } from "../layout";
 import client from "../utils/axiosClient";
 import { config } from "../utils/config";
-import { fetcher } from "../utils/fetcher";
 import { reachBottom } from "../utils/scrollEventHandler";
 
 function UserDropdown({
@@ -81,6 +80,21 @@ const initialRoom: SaveRoomRequest = {
 	description: "",
 };
 
+const getUsers = async (
+	url: string,
+	{ arg }: { arg: { token: string; page: number; pageSize: number } }
+) => {
+	return (await client.get(url, {
+		headers: {
+			Authorization: `Bearer ${arg.token}`,
+		},
+		params: {
+			page: arg.page,
+			pageSize: arg.pageSize,
+		},
+	})) as unknown as PageResponse<UserDto>;
+};
+
 export default function ({
 	open,
 	setOpen,
@@ -94,10 +108,7 @@ export default function ({
 	const [page, setPage] = useState<number>(0);
 	const { token } = useContext(AuthenticationContext);
 	const [refresh, setRefresh] = useLocalStorage<boolean>("refresh", false);
-	const usersData = useSWR(
-		[`${config.cloud.uri}/api/user`, token, setRefresh, { page, pageSize: 20 }],
-		fetcher
-	);
+	const usersData = useSWRMutation(`${config.cloud.uri}/api/user`, getUsers);
 	const [usersDropdown, setUsersDropdown] = useState<boolean>(false);
 	const [users, setUsers] = useState<UserDto[]>([]);
 	const [usersSelected, setUsersSelected] = useState<UserDto[]>([]);
@@ -111,6 +122,8 @@ export default function ({
 	useEffect(() => {
 		if (!open) {
 			handleResetModal();
+		} else {
+			usersData.trigger({ token, page, pageSize: 20 });
 		}
 	}, [open]);
 
@@ -121,15 +134,20 @@ export default function ({
 	}, [usersSelected]);
 
 	useEffect(() => {
-		usersData.mutate();
+		if (page !== 0) usersData.trigger({ token, page, pageSize: 20 });
 	}, [page]);
 
 	useEffect(() => {
-		if (usersData.data?.data) {
+		if (usersData.error) {
+			setRefresh(true);
+		} else {
 			if (page === 0) {
-				setUsers(usersData.data.data);
+				if (usersData.data?.data) {
+					setUsers(usersData.data.data);
+				}
 			} else {
 				setUsers((old) => {
+					if (!usersData.data?.data) return old;
 					return [...old, ...usersData.data?.data];
 				});
 			}

@@ -2,14 +2,7 @@
 
 import defaultPic from "@/public/avatar-default.png";
 import Image from "next/image";
-import { useContext } from "react";
-import useSWR from "swr";
-import { useLocalStorage } from "../hooks/useLocalStorage";
 import { RoomDto } from "../interfaces/IRoom";
-import { UserDto } from "../interfaces/IUser";
-import { AuthenticationContext } from "../layout";
-import { config } from "../utils/config";
-import { fetcher } from "../utils/fetcher";
 import { timeFromNow } from "../utils/timeConverter";
 
 export default function ({
@@ -21,14 +14,7 @@ export default function ({
 	handleActiveRoom: (newActiveRoom: string) => void;
 	classState: string;
 }) {
-	const { token } = useContext(AuthenticationContext);
-	const [refresh, setRefresh] = useLocalStorage<boolean>("refresh", false);
 	const chat = room.chats[0];
-	const { data } = useSWR(
-		[`${config.cloud.uri}/api/user/${chat?.user}`, token, setRefresh],
-		fetcher
-	);
-	const latestChatUser = data?.data as UserDto;
 	const truncateMessage =
 		chat?.message.length > 25 ? `${chat?.message.slice(0, 25)}...` : chat?.message;
 	return (
@@ -39,7 +25,7 @@ export default function ({
 			}}>
 			<div className="w-[15%]">
 				<Image
-					src={room?.avatar || latestChatUser?.avatar || defaultPic}
+					src={room?.avatar || defaultPic}
 					className="object-cover h-12 w-12 rounded-full"
 					alt="Room Picture"
 					width={256}

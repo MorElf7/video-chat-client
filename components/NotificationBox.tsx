@@ -6,7 +6,7 @@ import { useContext } from "react";
 import useSWR from "swr";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { NotificationDto } from "../interfaces/INotification";
-import { AuthenticationContext } from "../layout";
+import { AuthenticationContext } from "@/components/AuthenticationProvider";
 import { config } from "../utils/config";
 import { fetcher } from "../utils/fetcher";
 import { UserDto } from "../interfaces/IUser";
@@ -17,7 +17,7 @@ export default function ({ notification, handleNotifications }: { notification: 
 	const { token } = useContext(AuthenticationContext);
 	const [refresh, setRefresh] = useLocalStorage<boolean>("refresh", false);
 	const userData = useSWR(
-		[`${config.cloud.uri}/api/user/${notification.user}`, token, setRefresh],
+		[`${config.cloud.uri}/api/user/${notification?.user}`, token, setRefresh],
 		fetcher
 	);
   const userInfo: UserDto = userData.data?.data;

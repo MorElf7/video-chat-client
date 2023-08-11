@@ -1,9 +1,9 @@
-import { DataResponse } from "@/app/interfaces/IResponse";
-import { UserDto, WebRTCUser } from "@/app/interfaces/IUser";
-import { AuthenticationContext } from "@/app/layout";
-import client from "@/app/utils/axiosClient";
-import { config } from "@/app/utils/config";
-import { setUpSocket } from "@/app/utils/socket";
+import { AuthenticationContext } from "@/components/AuthenticationProvider";
+import { DataResponse } from "@/interfaces/IResponse";
+import { UserDto, WebRTCUser } from "@/interfaces/IUser";
+import client from "@/utils/axiosClient";
+import { config } from "@/utils/config";
+import { setUpSocket } from "@/utils/socket";
 import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
