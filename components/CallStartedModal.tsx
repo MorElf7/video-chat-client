@@ -1,3 +1,5 @@
+"use client"
+
 import { SetStateAction,  useContext, useEffect, } from "react";
 import useSWR from "swr";
 import { useLocalStorage } from "../hooks/useLocalStorage";

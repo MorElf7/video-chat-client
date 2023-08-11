@@ -1,24 +1,12 @@
-"use client";
-
 import ChatWindow from "@/components/CallChatWindow";
 import VideoWindow from "@/components/CallVideoWindow";
-import { AuthenticationContext } from "@/components/AuthenticationProvider";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useContext, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function Call({ params }: { params: { roomId: string } }) {
 	const roomId = params.roomId;
 	const searchParams = useSearchParams();
 	const audioConfig = searchParams.get("audio") === "true" ? true : false;
 	const videoConfig = searchParams.get("video") === "true" ? true : false;
-	const router = useRouter();
-	const { userProfile, token } = useContext(AuthenticationContext);
-
-	useEffect(() => {
-		if (token === "" && !userProfile) {
-			router.push("/login");
-		}
-	}, []);
 
 	return (
 		<div className="flex flex-row h-screen w-screen grow shrink">

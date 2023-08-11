@@ -1,3 +1,5 @@
+"use client"
+
 import { AuthenticationContext } from "@/components/AuthenticationProvider";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { ChatDto, RoomDto } from "@/interfaces/IRoom";

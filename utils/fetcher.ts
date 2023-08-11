@@ -1,5 +1,3 @@
-"use client";
-
 import { SetStateAction } from "react";
 import client from "./axiosClient";
 

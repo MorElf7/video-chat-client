@@ -1,3 +1,5 @@
+"use client"
+
 import { AuthenticationContext } from "@/components/AuthenticationProvider";
 import { SetStateAction, useCallback, useContext, useEffect, useState } from "react";
 import useSWRMutation from "swr/mutation";

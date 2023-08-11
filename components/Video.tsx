@@ -1,3 +1,5 @@
+"use client";
+
 import React, { VideoHTMLAttributes, useEffect, useRef, useState } from "react";
 
 type VideoProps = VideoHTMLAttributes<HTMLVideoElement> & {

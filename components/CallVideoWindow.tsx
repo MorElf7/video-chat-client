@@ -1,3 +1,5 @@
+"use client"
+
 import { AuthenticationContext } from "@/components/AuthenticationProvider";
 import { DataResponse } from "@/interfaces/IResponse";
 import { UserDto, WebRTCUser } from "@/interfaces/IUser";
@@ -31,6 +33,12 @@ export default function ({
 	const [hasVideo, setHasVideo] = useState<boolean>(videoConfig);
 	const [hasAudio, setHasAudio] = useState<boolean>(audioConfig);
 	const router = useRouter();
+
+	useEffect(() => {
+		if (token === "" && !userProfile) {
+			router.push("/login");
+		}
+	}, []);
 
 	const createPeerConnection = async (
 		socketId: string,
