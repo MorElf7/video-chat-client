@@ -1,22 +1,24 @@
 "use client";
 import { AuthenticationContext } from "@/components/AuthenticationProvider";
-import CallStartModaledModal from "@/components/CallStartedModal";
-import ChatWindow from "@/components/ChatWindow";
-import DashboardBar from "@/components/DashboardBar";
-import Navbar from "@/components/Navbar";
-import NewChatModal from "@/components/NewChatModal";
-import RoomSettingWindow from "@/components/RoomSettingWindow";
-import RoomWindow from "@/components/RoomWindow";
 import { PageResponse } from "@/interfaces/IResponse";
 import client from "@/utils/axiosClient";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import {  useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { RoomDto } from "../interfaces/IRoom";
 import { config } from "../utils/config";
 import { fetcher } from "../utils/fetcher";
+
+import ChatWindow from "@/components/ChatWindow";
+import DashboardBar from "@/components/DashboardBar";
+import Navbar from "@/components/Navbar";
+import RoomWindow from "@/components/RoomWindow";
+const RoomSettingWindow = dynamic(() => import("@/components/RoomSettingWindow"));
+const CallStartedModal = dynamic(() => import("@/components/CallStartedModal"));
+const NewChatModal = dynamic(() => import("@/components/NewChatModal"));
 
 const getUserRooms = async (
 	url: string,
@@ -92,17 +94,22 @@ export default function Home() {
 
 	return (
 		<>
-			<NewChatModal
-				open={newChatModal}
-				setOpen={setNewChatModal}
-				handleActiveRoom={handleActiveRoom}
-			/>
-			<CallStartModaledModal
-				open={callStartModal}
-				setOpen={setCallStartModal}
-				userCalled={userCalled}
-				chatRoom={roomInfo}
-			/>
+			{newChatModal && (
+				<NewChatModal
+					open={newChatModal}
+					setOpen={setNewChatModal}
+					handleActiveRoom={handleActiveRoom}
+				/>
+			)}
+
+			{callStartModal && (
+				<CallStartedModal
+					open={callStartModal}
+					setOpen={setCallStartModal}
+					userCalled={userCalled}
+					chatRoom={roomInfo}
+				/>
+			)}
 			<Navbar handleActiveRoom={handleActiveRoom} />
 			<DashboardBar
 				roomInfo={roomInfo}

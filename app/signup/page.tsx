@@ -1,13 +1,13 @@
 "use client";
 
+import { AuthenticationContext } from "@/components/AuthenticationProvider";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { LoginResponse, SignUpRequest } from "@/interfaces/IAuth";
+import client from "@/utils/axiosClient";
+import { config } from "@/utils/config";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { useLocalStorage } from "../../hooks/useLocalStorage";
-import { LoginResponse, SignUpRequest } from "../../interfaces/IAuth";
-import client from "../../utils/axiosClient";
-import { config } from "../../utils/config";
-import { AuthenticationContext } from "@/components/AuthenticationProvider";
 
 export default function Login() {
 	const [payload, setPayload] = useState({

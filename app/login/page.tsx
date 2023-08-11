@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { useLocalStorage } from "../../hooks/useLocalStorage";
-import { LoginRequest, LoginResponse } from "../../interfaces/IAuth";
-import client from "../../utils/axiosClient";
-import { config } from "../../utils/config";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { LoginRequest, LoginResponse } from "@/interfaces/IAuth";
+import client from "@/utils/axiosClient";
+import { config } from "@/utils/config";
 import { AuthenticationContext } from "@/components/AuthenticationProvider";
 
 export default function Login() {

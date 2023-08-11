@@ -1,13 +1,13 @@
 "use client";
 
 import { AuthenticationContext } from "@/components/AuthenticationProvider";
+import { DataResponse } from "@/interfaces/IResponse";
+import { SaveUserRequest, UserDto } from "@/interfaces/IUser";
+import client from "@/utils/axiosClient";
+import { config } from "@/utils/config";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { DataResponse } from "../../interfaces/IResponse";
-import { SaveUserRequest, UserDto } from "../../interfaces/IUser";
-import client from "../../utils/axiosClient";
-import { config } from "../../utils/config";
 
 const initalPayload = {
 	id: "",

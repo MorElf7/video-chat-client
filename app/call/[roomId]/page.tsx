@@ -1,3 +1,5 @@
+"use client"
+
 import ChatWindow from "@/components/CallChatWindow";
 import VideoWindow from "@/components/CallVideoWindow";
 import { useSearchParams } from "next/navigation";

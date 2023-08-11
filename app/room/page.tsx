@@ -2,15 +2,16 @@
 
 import { AuthenticationContext } from "@/components/AuthenticationProvider";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { PageResponse } from "@/interfaces/IResponse";
+import { RoomDto } from "@/interfaces/IRoom";
+import client from "@/utils/axiosClient";
+import { config } from "@/utils/config";
+import { reachBottom } from "@/utils/scrollEventHandler";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import useSWRMutation from "swr/mutation";
-import RoomSearchBox from "../../components/RoomSearchBox";
-import { PageResponse } from "../../interfaces/IResponse";
-import { RoomDto } from "../../interfaces/IRoom";
-import client from "../../utils/axiosClient";
-import { config } from "../../utils/config";
-import { reachBottom } from "../../utils/scrollEventHandler";
+const RoomSearchBox = dynamic(() => import("@/components/RoomSearchBox"));
 
 const searchRoom = async (
 	url: string,
