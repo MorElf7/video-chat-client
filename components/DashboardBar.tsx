@@ -17,12 +17,12 @@ export default function ({
 
 	const handleStartVideoCall = async () => {
 		if (roomInfo) {
-			router.push(`/call/${roomInfo.callRoom}?audio=true&video=true`);
+			router.push(`/call/${roomInfo.id}?audio=true&video=true`);
 		}
 	};
 	const handleStartAudioCall = () => {
 		if (roomInfo) {
-			router.push(`/call/${roomInfo.callRoom}?audio=true`);
+			router.push(`/call/${roomInfo.id}?audio=true`);
 		}
 	};
 	return (

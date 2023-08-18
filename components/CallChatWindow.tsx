@@ -1,6 +1,7 @@
-"use client"
+"use client";
 
 import { AuthenticationContext } from "@/components/AuthenticationProvider";
+import ChatBox from "@/components/ChatBox";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { ChatDto, RoomDto } from "@/interfaces/IRoom";
 import { config } from "@/utils/config";
@@ -10,7 +11,6 @@ import { setUpSocket } from "@/utils/socket";
 import { useContext, useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 import useSWR from "swr";
-import ChatBox from "@/components/ChatBox";
 
 export default function ({ roomId }: { roomId: string | null }) {
 	const { token, userProfile } = useContext(AuthenticationContext);
@@ -19,14 +19,14 @@ export default function ({ roomId }: { roomId: string | null }) {
 	const [chats, setChats] = useState<ChatDto[]>([]);
 	const [message, setMessage] = useState<string>("");
 	const socketRef = useRef<Socket>();
-	const chatRoomData = useSWR(
-		[`${config.cloud.uri}/api/room/call/${roomId}`, token, setRefresh, null],
+	const roomData = useSWR(
+		[`${config.cloud.uri}/api/room/${roomId}`, token, setRefresh, null],
 		fetcher
 	);
-	const chatRoom: RoomDto = chatRoomData.data?.data;
+	const roomInfo: RoomDto = roomData.data?.data;
 	const chatsData = useSWR(
 		[
-			`${config.cloud.uri}/api/room/${chatRoom?.id}/chat`,
+			`${config.cloud.uri}/api/room/${roomId}/chat`,
 			token,
 			setRefresh,
 			{
@@ -46,7 +46,7 @@ export default function ({ roomId }: { roomId: string | null }) {
 			});
 
 			socketRef.current.emit("subscribe", {
-				roomId: chatRoom?.id,
+				roomId: roomId,
 				type: "chat",
 			});
 		}
@@ -54,7 +54,7 @@ export default function ({ roomId }: { roomId: string | null }) {
 		return () => {
 			socketRef.current?.disconnect();
 		};
-	}, [chatRoom]);
+	}, []);
 
 	useEffect(() => {
 		chatsData.mutate();
@@ -72,9 +72,9 @@ export default function ({ roomId }: { roomId: string | null }) {
 
 	const handleSendMessage = () => {
 		if (message === "") return;
-		if (chatRoom?.id) {
+		if (roomId) {
 			socketRef.current?.emit("send-message", {
-				to: chatRoom?.id,
+				to: roomId,
 				message,
 			});
 			setMessage("");
@@ -129,7 +129,7 @@ export default function ({ roomId }: { roomId: string | null }) {
 					))}
 			</div>
 			<div className="flex grow bg-zinc-600 rounded-t-lg h-[40px] p-3 items-center text-white">
-				{chatRoom?.name}
+				{roomInfo?.name}
 			</div>
 		</div>
 	);
